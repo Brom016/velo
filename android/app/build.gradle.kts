@@ -1,8 +1,12 @@
 plugins {
     id("com.android.application")
+<<<<<<< HEAD
     // START: FlutterFire Configuration
     id("com.google.gms.google-services")
     // END: FlutterFire Configuration
+=======
+    id("kotlin-android")
+>>>>>>> b5440cd9c1fee6707fb69424caffafa405c5283c
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
@@ -17,6 +21,13 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+<<<<<<< HEAD
+=======
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_17.toString()
+    }
+
+>>>>>>> b5440cd9c1fee6707fb69424caffafa405c5283c
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.velo"
@@ -37,12 +48,15 @@ android {
     }
 }
 
+<<<<<<< HEAD
 kotlin {
     compilerOptions {
         jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
     }
 }
 
+=======
+>>>>>>> b5440cd9c1fee6707fb69424caffafa405c5283c
 flutter {
     source = "../.."
 }

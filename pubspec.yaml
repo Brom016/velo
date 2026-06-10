@@ -1,15 +1,25 @@
 name: velo
+<<<<<<< HEAD
 description: Vehicle speedometer and telemetry app — local-first, offline capable.
 publish_to: none
 version: 1.0.0+1
 
 environment:
   sdk: ">=3.3.0 <4.0.0"
+=======
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.11.1
+>>>>>>> b5440cd9c1fee6707fb69424caffafa405c5283c
 
 dependencies:
   flutter:
     sdk: flutter
 
+<<<<<<< HEAD
   # ── State management ────────────────────────────────────────────────────────
   get: ^4.6.6
 
@@ -69,3 +79,12 @@ flutter:
         - asset: assets/fonts/JetBrainsMono-Regular.ttf
         - asset: assets/fonts/JetBrainsMono-Bold.ttf
           weight: 700
+=======
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+>>>>>>> b5440cd9c1fee6707fb69424caffafa405c5283c
