@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-<<<<<<< HEAD
 import 'package:firebase_core/firebase_core.dart';
 import 'package:get/get.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
@@ -40,24 +39,6 @@ class VeloApp extends StatelessWidget {
         GetPage(name: AppRoutes.settings, page: () => const SettingsScreen()),
         GetPage(name: AppRoutes.tripDetail, page: () => const TripDetailScreen()),
       ],
-=======
-
-void main() {
-  runApp(const MainApp());
-}
-
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
-      ),
->>>>>>> b5440cd9c1fee6707fb69424caffafa405c5283c
     );
   }
 }

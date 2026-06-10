@@ -5,9 +5,11 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
+import '../../core/constants/app_sizing.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/remote/firebase/auth_service.dart';
+import '../camera/camera_controller.dart';
 import 'settings_controller.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -27,8 +29,9 @@ class SettingsScreen extends StatelessWidget {
           onPressed: () => Get.back(),
         ),
       ),
-      body: Obx(() => ListView(
-        padding: const EdgeInsets.all(AppDimensions.md),
+      body: Obx(() {
+        return ListView(
+        padding: EdgeInsets.all(AppSizing.spacing(context, 14)),
         children: [
           // ── Edit Profile ──
           if (auth.user != null) ...[
@@ -57,8 +60,73 @@ class SettingsScreen extends StatelessWidget {
           const SizedBox(height: AppDimensions.md),
           _section('Minimap Kamera'),
           _sliderTile(c, 'Opacity', c.miniMapOpacity.value, 0.2, 1.0, c.setMiniMapOpacity),
+          SizedBox(height: AppSizing.spacing(context, 10)),
+          _section('Tampilan Kamera'),
+          ..._cameraOverlayTiles(),
         ],
-      )),
+      );
+    }),
+  );
+  }
+
+  List<Widget> _cameraOverlayTiles() {
+    final camCtrl = Get.find<CameraController>();
+    final ov = camCtrl.overlay.value;
+    final tiles = <String, bool Function()>{
+      'SPD (Kecepatan)': () => ov.speed,
+      'AVG (Rata-rata)': () => ov.avgSpeed,
+      'MAX (Tertinggi)': () => ov.maxSpeed,
+      'DST (Jarak)': () => ov.distance,
+      'GPS (Koordinat)': () => ov.gps,
+      'TIME (Waktu)': () => ov.datetime,
+      'G-Force': () => ov.gforce,
+      'Kompas': () => ov.compass,
+      'Mini-map': () => ov.miniMap,
+    };
+
+    return tiles.entries.map((e) {
+      return _overlaySwitchTile(
+        e.key,
+        e.value(),
+        () => camCtrl.toggleOverlay(_keyForLabel(e.key)),
+      );
+    }).toList();
+  }
+
+  String _keyForLabel(String label) {
+    if (label.startsWith('SPD')) return 'speed';
+    if (label.startsWith('AVG')) return 'avgSpeed';
+    if (label.startsWith('MAX')) return 'maxSpeed';
+    if (label.startsWith('DST')) return 'distance';
+    if (label.startsWith('GPS')) return 'gps';
+    if (label.startsWith('TIME')) return 'datetime';
+    if (label.startsWith('G-Force')) return 'gforce';
+    if (label.startsWith('Kompas')) return 'compass';
+    if (label.startsWith('Mini-map')) return 'miniMap';
+    return '';
+  }
+
+  Widget _overlaySwitchTile(String label, bool value, VoidCallback onToggle) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 2),
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppDimensions.md, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.bgCard,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(label, style: AppTextStyles.body.copyWith(fontSize: 13)),
+          ),
+          Switch(
+            value: value,
+            onChanged: (_) => onToggle(),
+            activeThumbColor: AppColors.amber,
+          ),
+        ],
+      ),
     );
   }
 
@@ -165,8 +233,9 @@ class SettingsScreen extends StatelessWidget {
                 ],
               ),
             ),
-    );
-  }
+        );
+      }
+
 
   String _initials2(UserModel user) {
     if (user.name.isNotEmpty) {

@@ -6,7 +6,6 @@
 
 #include "generated_plugin_registrant.h"
 
-<<<<<<< HEAD
 #include <file_selector_linux/file_selector_plugin.h>
 #include <sqlite3_flutter_libs/sqlite3_flutter_libs_plugin.h>
 
@@ -17,8 +16,4 @@ void fl_register_plugins(FlPluginRegistry* registry) {
   g_autoptr(FlPluginRegistrar) sqlite3_flutter_libs_registrar =
       fl_plugin_registry_get_registrar_for_plugin(registry, "Sqlite3FlutterLibsPlugin");
   sqlite3_flutter_libs_plugin_register_with_registrar(sqlite3_flutter_libs_registrar);
-=======
-
-void fl_register_plugins(FlPluginRegistry* registry) {
->>>>>>> b5440cd9c1fee6707fb69424caffafa405c5283c
 }

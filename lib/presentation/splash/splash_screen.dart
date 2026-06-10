@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
+import '../../core/constants/app_sizing.dart';
 import '../../core/constants/app_text_styles.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -51,6 +52,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final s = AppSizing.scale(context);
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
       body: Stack(
@@ -66,15 +68,15 @@ class _SplashScreenState extends State<SplashScreen>
                     style: AppTextStyles.monoHero.copyWith(
                       color: AppColors.amber,
                       letterSpacing: 12,
-                      fontSize: 64,
+                      fontSize: 56 * s,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8 * s),
                   Text(
                     'TELEMETRY SYSTEM',
                     style: AppTextStyles.label.copyWith(
                       letterSpacing: 6,
-                      fontSize: 11,
+                      fontSize: 10 * s,
                     ),
                   ),
                 ],
@@ -82,7 +84,7 @@ class _SplashScreenState extends State<SplashScreen>
             ),
           ),
           Positioned(
-            bottom: 32,
+            bottom: 28 * s,
             left: 0,
             right: 0,
             child: Text(

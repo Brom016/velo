@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:latlong2/latlong.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
+import '../../core/constants/app_sizing.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/utils/formatters.dart';
 import '../../data/local/database/app_database.dart';
@@ -40,39 +41,39 @@ class TripDetailScreen extends StatelessWidget {
             ),
           ),
           body: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppDimensions.md),
+            padding: EdgeInsets.all(AppSizing.spacing(context, 14)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(Formatters.date(trip.startTime),
                   style: AppTextStyles.subheading),
-                const SizedBox(height: AppDimensions.md),
+                SizedBox(height: AppSizing.spacing(context, 14)),
                 Row(
                   children: [
-                    _statBox('JARAK', '${Formatters.shortDistance(trip.totalDistanceKm)} km', AppColors.positive),
-                    const SizedBox(width: AppDimensions.sm),
-                    _statBox('MAKS', '${Formatters.speed(trip.maxSpeedKmh)} km/h', AppColors.amber),
-                    const SizedBox(width: AppDimensions.sm),
-                    _statBox('RATA-RATA', '${Formatters.speed(trip.avgSpeedKmh)} km/h', AppColors.cyan),
+                    _statBox(context, 'JARAK', '${Formatters.shortDistance(trip.totalDistanceKm)} km', AppColors.positive),
+                    SizedBox(width: AppSizing.spacing(context, 8)),
+                    _statBox(context, 'MAKS', '${Formatters.speed(trip.maxSpeedKmh)} km/h', AppColors.amber),
+                    SizedBox(width: AppSizing.spacing(context, 8)),
+                    _statBox(context, 'RATA-RATA', '${Formatters.speed(trip.avgSpeedKmh)} km/h', AppColors.cyan),
                   ],
                 ),
-                const SizedBox(height: AppDimensions.sm),
+                SizedBox(height: AppSizing.spacing(context, 8)),
                 Row(
                   children: [
-                    _statBox('DURASI', Formatters.duration(
+                    _statBox(context, 'DURASI', Formatters.duration(
                       trip.endTime != null
                           ? trip.endTime!.difference(trip.startTime)
                           : Duration.zero,
                     ), AppColors.textPrimary),
-                    const SizedBox(width: AppDimensions.sm),
-                    _statBox('G-FORCE', '${trip.maxGForce.toStringAsFixed(2)} G', AppColors.danger),
+                    SizedBox(width: AppSizing.spacing(context, 8)),
+                    _statBox(context, 'G-FORCE', '${trip.maxGForce.toStringAsFixed(2)} G', AppColors.danger),
                   ],
                 ),
-                const SizedBox(height: AppDimensions.lg),
+                SizedBox(height: AppSizing.spacing(context, 20)),
                 Text('Rute Perjalanan', style: AppTextStyles.subheading),
-                const SizedBox(height: AppDimensions.sm),
+                SizedBox(height: AppSizing.spacing(context, 8)),
                 SizedBox(
-                  height: 250,
+                  height: AppSizing.spacing(context, 220).clamp(180, 350),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
                     child: _RouteMap(tripId: tripId),
@@ -86,10 +87,11 @@ class TripDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _statBox(String label, String value, Color color) {
+  Widget _statBox(BuildContext context, String label, String value, Color color) {
+    final s = AppSizing.scale(context);
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.all(AppDimensions.cardPadding),
+        padding: EdgeInsets.all(AppSizing.cardPadding(context)),
         decoration: BoxDecoration(
           color: AppColors.bgCard,
           borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
@@ -99,8 +101,9 @@ class TripDetailScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(label, style: AppTextStyles.label),
-            const SizedBox(height: 4),
-            Text(value, style: AppTextStyles.monoMd.copyWith(color: color)),
+            SizedBox(height: 3 * s),
+            Text(value, style: AppTextStyles.monoMd.copyWith(
+              color: color, fontSize: 16 * s)),
           ],
         ),
       ),

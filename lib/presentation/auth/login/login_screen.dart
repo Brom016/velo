@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_dimensions.dart';
+import '../../../core/constants/app_sizing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../shared/widgets/shared_widgets.dart';
 import '../../../shared/widgets/velo_button.dart';
@@ -13,6 +13,7 @@ class LoginScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = Get.find<LoginController>();
+    final s = AppSizing.scale(context);
     final emailCtrl = TextEditingController();
     final passCtrl = TextEditingController();
 
@@ -20,20 +21,20 @@ class LoginScreen extends StatelessWidget {
       backgroundColor: AppColors.bgPrimary,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: AppDimensions.lg),
+          padding: EdgeInsets.symmetric(horizontal: AppSizing.spacing(context, 20)),
           child: Column(
             children: [
-              const SizedBox(height: AppDimensions.xxl),
+              SizedBox(height: AppSizing.spacing(context, 40)),
               Text('VELO', style: AppTextStyles.monoLg.copyWith(
-                color: AppColors.amber, letterSpacing: 8, fontSize: 36,
+                color: AppColors.amber, letterSpacing: 8, fontSize: 32 * s,
               )),
-              const SizedBox(height: AppDimensions.xxl),
+              SizedBox(height: AppSizing.spacing(context, 32)),
               Text('Masuk', style: AppTextStyles.heading),
-              const SizedBox(height: AppDimensions.lg),
+              SizedBox(height: AppSizing.spacing(context, 20)),
               Obx(() {
                 if (c.error.value.isEmpty) return const SizedBox.shrink();
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: AppDimensions.md),
+                  padding: EdgeInsets.only(bottom: AppSizing.spacing(context, 14)),
                   child: ErrorBanner(message: c.error.value),
                 );
               }),
@@ -45,7 +46,7 @@ class LoginScreen extends StatelessWidget {
                 keyboardType: TextInputType.emailAddress,
                 onChanged: c.setEmail,
               ),
-              const SizedBox(height: AppDimensions.sm + 6),
+              SizedBox(height: AppSizing.spacing(context, 12)),
               VeloTextField(
                 label: 'Password',
                 hint: 'Minimal 6 karakter',
@@ -54,13 +55,13 @@ class LoginScreen extends StatelessWidget {
                 obscure: true,
                 onChanged: c.setPassword,
               ),
-              const SizedBox(height: AppDimensions.lg),
+              SizedBox(height: AppSizing.spacing(context, 20)),
               Obx(() => VeloButton(
                 label: 'MASUK',
                 loading: c.loading.value,
                 onPressed: c.login,
               )),
-              const SizedBox(height: AppDimensions.sm),
+              SizedBox(height: AppSizing.spacing(context, 8)),
               Obx(() => VeloButton(
                 label: 'MASUK DENGAN GOOGLE',
                 icon: Icons.login,
@@ -68,13 +69,13 @@ class LoginScreen extends StatelessWidget {
                 loading: c.loading.value,
                 onPressed: c.loginWithGoogle,
               )),
-              const SizedBox(height: AppDimensions.sm),
+              SizedBox(height: AppSizing.spacing(context, 8)),
               VeloButton(
                 label: 'Lanjut tanpa login',
                 style: VeloButtonStyle.ghost,
                 onPressed: c.skipLogin,
               ),
-              const SizedBox(height: AppDimensions.lg),
+              SizedBox(height: AppSizing.spacing(context, 20)),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -89,7 +90,7 @@ class LoginScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: AppDimensions.lg),
+              SizedBox(height: AppSizing.spacing(context, 20)),
             ],
           ),
         ),

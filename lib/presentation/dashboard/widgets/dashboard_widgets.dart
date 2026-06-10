@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
+import '../../../core/constants/app_sizing.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/utils/formatters.dart';
 
@@ -19,6 +20,7 @@ class SpeedometerGauge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = AppSizing.scale(context);
     final progress = (speed / maxScale).clamp(0.0, 1.0);
     final startAngle = 150.0;
     final sweepAngle = 240.0;
@@ -41,7 +43,7 @@ class SpeedometerGauge extends StatelessWidget {
             children: [
               Text(
                 Formatters.speed(speed),
-                style: AppTextStyles.monoHero.copyWith(fontSize: 56),
+                style: AppTextStyles.monoHero.copyWith(fontSize: 48 * s),
               ),
               Text('km/h', style: AppTextStyles.label),
             ],
@@ -150,6 +152,7 @@ class GForceIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = AppSizing.scale(context);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -160,10 +163,13 @@ class GForceIndicator extends StatelessWidget {
             painter: _GForcePainter(gX: gX, gY: gY),
           ),
         ),
-        const SizedBox(height: AppDimensions.xs),
+        SizedBox(height: 2 * s),
         Text(
           '${Formatters.gForce(magnitude)} G',
-          style: AppTextStyles.monoSm.copyWith(color: AppColors.amber),
+          style: AppTextStyles.monoSm.copyWith(
+            color: AppColors.amber,
+            fontSize: 12 * s,
+          ),
         ),
       ],
     );
@@ -232,6 +238,7 @@ class CompassIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = AppSizing.scale(context);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -242,10 +249,13 @@ class CompassIndicator extends StatelessWidget {
             painter: _CompassPainter(bearing: bearing),
           ),
         ),
-        const SizedBox(height: AppDimensions.xs),
+        SizedBox(height: 2 * s),
         Text(
           Formatters.bearing(bearing),
-          style: AppTextStyles.monoSm.copyWith(color: AppColors.cyan),
+          style: AppTextStyles.monoSm.copyWith(
+            color: AppColors.cyan,
+            fontSize: 12 * s,
+          ),
         ),
       ],
     );
@@ -354,8 +364,9 @@ class MetricCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = AppSizing.scale(context);
     return Container(
-      padding: const EdgeInsets.all(AppDimensions.cardPadding),
+      padding: EdgeInsets.all(AppSizing.cardPadding(context)),
       decoration: BoxDecoration(
         color: AppColors.bgCard,
         borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
@@ -368,25 +379,29 @@ class MetricCard extends StatelessWidget {
           if (locked)
             Row(
               children: [
-                const Icon(Icons.lock_outline,
-                    size: 10, color: AppColors.textDisabled),
-                const SizedBox(width: 4),
+                Icon(Icons.lock_outline,
+                    size: 10 * s, color: AppColors.textDisabled),
+                SizedBox(width: 4 * s),
                 Text(label, style: AppTextStyles.label),
               ],
             )
           else ...[
             Text(label, style: AppTextStyles.label),
-            const SizedBox(height: 4),
+            SizedBox(height: 3 * s),
             Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(value,
-                  style: AppTextStyles.monoMd.copyWith(color: valueColor)),
+                  style: AppTextStyles.monoMd.copyWith(
+                    color: valueColor,
+                    fontSize: 18 * s,
+                  )),
                 if (unit.isNotEmpty) ...[
-                  const SizedBox(width: 4),
+                  SizedBox(width: 3 * s),
                   Text(unit,
                     style: AppTextStyles.monoXs
-                        .copyWith(color: AppColors.textSecondary)),
+                        .copyWith(color: AppColors.textSecondary,
+                            fontSize: 10 * s)),
                 ],
               ],
             ),

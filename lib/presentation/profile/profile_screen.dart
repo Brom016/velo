@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
 import '../../core/constants/app_routes.dart';
+import '../../core/constants/app_sizing.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/utils/formatters.dart';
 import '../../data/remote/firebase/auth_service.dart';
@@ -16,6 +17,7 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = Get.find<ProfileController>();
+    final s = AppSizing.scale(context);
 
     return SafeArea(
       child: Obx(() {
@@ -25,15 +27,15 @@ class ProfileScreen extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.person_outline,
-                    size: 64, color: AppColors.textSecondary),
-                const SizedBox(height: AppDimensions.md),
+                Icon(Icons.person_outline,
+                    size: 56 * s, color: AppColors.textSecondary),
+                SizedBox(height: AppSizing.spacing(context, 14)),
                 Text('Belum masuk', style: AppTextStyles.heading),
-                const SizedBox(height: AppDimensions.sm),
+                SizedBox(height: AppSizing.spacing(context, 8)),
                 Text('Masuk untuk melihat profil',
                     style: AppTextStyles.body.copyWith(
                         color: AppColors.textSecondary)),
-                const SizedBox(height: AppDimensions.lg),
+                SizedBox(height: AppSizing.spacing(context, 20)),
                 VeloButton(
                   label: 'MASUK',
                   width: 200,
@@ -45,39 +47,39 @@ class ProfileScreen extends StatelessWidget {
         }
 
         return SingleChildScrollView(
-          padding: const EdgeInsets.all(AppDimensions.md),
+          padding: EdgeInsets.all(AppSizing.spacing(context, 14)),
           child: Column(
             children: [
-              const SizedBox(height: AppDimensions.md),
-              _buildAvatar(c, user),
-              const SizedBox(height: AppDimensions.sm),
+              SizedBox(height: AppSizing.spacing(context, 12)),
+              _buildAvatar(c, user, s),
+              SizedBox(height: AppSizing.spacing(context, 8)),
               Text(c.displayName, style: AppTextStyles.heading),
-              const SizedBox(height: 4),
+              SizedBox(height: 4 * s),
               Text(user.email, style: AppTextStyles.body.copyWith(
                   color: AppColors.textSecondary)),
-              const SizedBox(height: AppDimensions.lg),
+              SizedBox(height: AppSizing.spacing(context, 20)),
 
               Row(
                 children: [
-                  _statBox('${c.tripCount.value}', 'Perjalanan'),
-                  const SizedBox(width: AppDimensions.sm),
-                  _statBox(Formatters.shortDistance(c.totalDistance.value), 'Total Jarak'),
-                  const SizedBox(width: AppDimensions.sm),
-                  _statBox(Formatters.duration(Duration(seconds: c.totalDuration.value.toInt())), 'Total Waktu'),
+                  _statBox(context, '${c.tripCount.value}', 'Perjalanan', s),
+                  SizedBox(width: AppSizing.spacing(context, 8)),
+                  _statBox(context, Formatters.shortDistance(c.totalDistance.value), 'Total Jarak', s),
+                  SizedBox(width: AppSizing.spacing(context, 8)),
+                  _statBox(context, Formatters.duration(Duration(seconds: c.totalDuration.value.toInt())), 'Total Waktu', s),
                 ],
               ),
-              const SizedBox(height: AppDimensions.lg),
-              _menuItem(Icons.settings_outlined, 'Pengaturan',
-                  () => Get.toNamed(AppRoutes.settings)),
-              const SizedBox(height: AppDimensions.sm),
-              _menuItem(Icons.info_outline, 'Tentang', () {}),
-              const SizedBox(height: AppDimensions.lg),
+              SizedBox(height: AppSizing.spacing(context, 20)),
+              _menuItem(context, Icons.settings_outlined, 'Pengaturan',
+                  () => Get.toNamed(AppRoutes.settings), s),
+              SizedBox(height: AppSizing.spacing(context, 8)),
+              _menuItem(context, Icons.info_outline, 'Tentang', () {}, s),
+              SizedBox(height: AppSizing.spacing(context, 20)),
               VeloButton(
                 label: 'KELUAR',
                 style: VeloButtonStyle.danger,
                 onPressed: c.logout,
               ),
-              const SizedBox(height: AppDimensions.lg),
+              SizedBox(height: AppSizing.spacing(context, 20)),
             ],
           ),
         );
@@ -85,7 +87,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAvatar(ProfileController c, UserModel user) {
+  Widget _buildAvatar(ProfileController c, UserModel user, double s) {
     ImageProvider? avatarImage;
     final photoUrl = user.photoUrl;
     if (photoUrl != null) {
@@ -98,9 +100,10 @@ class ProfileScreen extends StatelessWidget {
       } catch (_) {}
     }
 
+    final avatarSize = (76 * s).clamp(60.0, 100.0);
     return Container(
-      width: 80,
-      height: 80,
+      width: avatarSize,
+      height: avatarSize,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(color: AppColors.amber, width: 2),
@@ -111,16 +114,21 @@ class ProfileScreen extends StatelessWidget {
       child: avatarImage == null
           ? Center(
               child: Text(c.initials,
-                  style: AppTextStyles.monoLg.copyWith(color: AppColors.amber)),
+                  style: AppTextStyles.monoLg.copyWith(
+                    color: AppColors.amber,
+                    fontSize: 22 * s,
+                  )),
             )
           : null,
     );
   }
 
-  Widget _statBox(String value, String label) {
+  Widget _statBox(BuildContext context, String value, String label, double s) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: AppDimensions.md),
+        padding: EdgeInsets.symmetric(
+          vertical: AppSizing.spacing(context, 12),
+        ),
         decoration: BoxDecoration(
           color: AppColors.bgCard,
           borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
@@ -129,7 +137,10 @@ class ProfileScreen extends StatelessWidget {
         child: Column(
           children: [
             Text(value,
-              style: AppTextStyles.monoMd.copyWith(color: AppColors.amber),
+              style: AppTextStyles.monoMd.copyWith(
+                color: AppColors.amber,
+                fontSize: 16 * s,
+              ),
               overflow: TextOverflow.ellipsis,
             ),
             Text(label, style: AppTextStyles.label),
@@ -139,12 +150,13 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _menuItem(IconData icon, String label, VoidCallback onTap) {
+  Widget _menuItem(BuildContext context, IconData icon, String label, VoidCallback onTap, double s) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(
-            horizontal: AppDimensions.md, vertical: AppDimensions.sm + 4),
+        padding: EdgeInsets.symmetric(
+            horizontal: AppSizing.spacing(context, 14),
+            vertical: AppSizing.spacing(context, 10)),
         decoration: BoxDecoration(
           color: AppColors.bgCard,
           borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
@@ -152,12 +164,12 @@ class ProfileScreen extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(icon, color: AppColors.textSecondary, size: 20),
-            const SizedBox(width: AppDimensions.sm),
+            Icon(icon, color: AppColors.textSecondary, size: 20 * s),
+            SizedBox(width: AppSizing.spacing(context, 8)),
             Expanded(
               child: Text(label, style: AppTextStyles.body),
             ),
-            const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+            Icon(Icons.chevron_right, color: AppColors.textSecondary),
           ],
         ),
       ),

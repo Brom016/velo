@@ -2,10 +2,7 @@ allprojects {
     repositories {
         google()
         mavenCentral()
-<<<<<<< HEAD
         maven { url = uri("https://jitpack.io") }
-=======
->>>>>>> b5440cd9c1fee6707fb69424caffafa405c5283c
     }
 }
 

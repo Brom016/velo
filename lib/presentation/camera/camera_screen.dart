@@ -8,6 +8,7 @@ import 'package:latlong2/latlong.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
 import '../../core/constants/app_routes.dart';
+import '../../core/constants/app_sizing.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/utils/formatters.dart';
 import '../../data/repositories/auth_repository.dart';
@@ -280,32 +281,38 @@ class _CameraScreenState extends State<CameraScreen> with SingleTickerProviderSt
   }
 
   Widget _hudRow(String label, String value, [Color? valColor, bool small = false]) {
+    final s = AppSizing.scale(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 1),
+      padding: EdgeInsets.symmetric(vertical: 1 * s),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (valColor == null || !small) ...[
-            Text(label, style: AppTextStyles.monoXxs.copyWith(color: AppColors.amber)),
-            const SizedBox(width: 6),
+            Text(label, style: AppTextStyles.monoXxs.copyWith(
+              color: AppColors.amber, fontSize: 9 * s)),
+            SizedBox(width: 5 * s),
           ],
           Text(value,
             style: small
-                ? AppTextStyles.monoXxs.copyWith(color: valColor ?? AppColors.textPrimary)
-                : AppTextStyles.monoSm.copyWith(color: valColor ?? AppColors.textPrimary)),
+                ? AppTextStyles.monoXxs.copyWith(
+                    fontSize: 9 * s, color: valColor ?? AppColors.textPrimary)
+                : AppTextStyles.monoSm.copyWith(
+                    fontSize: 11 * s, color: valColor ?? AppColors.textPrimary)),
         ],
       ),
     );
   }
 
   Widget _animRow(String label, double value, String Function(double) format, Color color) {
+    final s = AppSizing.scale(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 1),
+      padding: EdgeInsets.symmetric(vertical: 1 * s),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(label, style: AppTextStyles.monoXxs.copyWith(color: AppColors.amber)),
-          const SizedBox(width: 6),
+          Text(label, style: AppTextStyles.monoXxs.copyWith(
+            color: AppColors.amber, fontSize: 9 * s)),
+          SizedBox(width: 5 * s),
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
             transitionBuilder: (child, anim) => FadeTransition(
@@ -315,7 +322,8 @@ class _CameraScreenState extends State<CameraScreen> with SingleTickerProviderSt
             child: Text(
               format(value),
               key: ValueKey('$label-${value.toStringAsFixed(1)}'),
-              style: AppTextStyles.monoSm.copyWith(color: color),
+              style: AppTextStyles.monoSm.copyWith(
+                fontSize: 11 * s, color: color),
             ),
           ),
         ],
@@ -324,9 +332,11 @@ class _CameraScreenState extends State<CameraScreen> with SingleTickerProviderSt
   }
 
   Widget _cameraCompass(double bearing) {
+    final s = AppSizing.scale(context);
+    final size = (76 * s).clamp(60.0, 120.0);
     return SizedBox(
-      width: 80,
-      height: 80,
+      width: size,
+      height: size,
       child: CustomPaint(
         painter: _CameraCompassPainter(bearing: bearing),
       ),
@@ -334,10 +344,12 @@ class _CameraScreenState extends State<CameraScreen> with SingleTickerProviderSt
   }
 
   Widget _cameraGforce(double gX, double gY) {
+    final s = AppSizing.scale(context);
+    final size = (76 * s).clamp(60.0, 120.0);
     final mag = sqrt(gX * gX + gY * gY);
     return SizedBox(
-      width: 80,
-      height: 80,
+      width: size,
+      height: size,
       child: CustomPaint(
         painter: _CameraGForcePainter(gX: gX, gY: gY, magnitude: mag),
       ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
+import '../../core/constants/app_sizing.dart';
 import '../../core/constants/app_text_styles.dart';
 import '../../core/utils/formatters.dart';
 import '../../services/sensor_manager.dart';
@@ -18,6 +19,7 @@ class DashboardScreen extends StatelessWidget {
     final c = Get.find<DashboardController>();
     final sensors = Get.find<SensorManager>();
     final session = Get.find<TripSessionManager>();
+    final s = AppSizing.scale(context);
 
     return SafeArea(
       child: Obx(() {
@@ -29,36 +31,36 @@ class DashboardScreen extends StatelessWidget {
         return Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(
-                  AppDimensions.md, AppDimensions.sm, AppDimensions.md, 0),
-              child:               Row(
+              padding: EdgeInsets.fromLTRB(
+                  AppSizing.spacing(context, 12), 6, AppSizing.spacing(context, 12), 0),
+              child: Row(
                 children: [
                   Text('VELO', style: AppTextStyles.monoMd.copyWith(
-                    color: AppColors.amber, letterSpacing: 4, fontSize: 18,
+                    color: AppColors.amber, letterSpacing: 4, fontSize: 16 * s,
                   )),
                   if (isRecording) ...[
                     const Spacer(),
                     Text(
                       Formatters.duration(session.elapsed.value),
                       style: AppTextStyles.monoMd.copyWith(
-                          color: AppColors.textPrimary, fontSize: 16),
+                          color: AppColors.textPrimary, fontSize: 14 * s),
                     ),
                   ],
                 ],
               ),
             ),
-            const SizedBox(height: AppDimensions.sm),
+            SizedBox(height: 6 * s),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: AppDimensions.md),
+                padding: EdgeInsets.symmetric(horizontal: AppSizing.spacing(context, 12)),
                 child: Column(
                   children: [
                     SpeedometerGauge(
                       speed: data.speedKmh,
                       maxScale: 200,
-                      size: 220,
+                      size: AppSizing.speedometerSize(context),
                     ),
-                    const SizedBox(height: AppDimensions.md),
+                    SizedBox(height: 12 * s),
                     Row(
                       children: [
                         Expanded(
@@ -68,7 +70,7 @@ class DashboardScreen extends StatelessWidget {
                             unit: 'km/h',
                           ),
                         ),
-                        const SizedBox(width: AppDimensions.sm),
+                        SizedBox(width: 6 * s),
                         Expanded(
                           child: MetricCard(
                             label: 'TERTINGGI',
@@ -85,7 +87,7 @@ class DashboardScreen extends StatelessWidget {
                             valueColor: AppColors.positive,
                           ),
                         ),
-                        const SizedBox(width: AppDimensions.sm),
+                        SizedBox(width: 6 * s),
                         Expanded(
                           child: MetricCard(
                             label: 'G TERTINGGI',
@@ -96,12 +98,12 @@ class DashboardScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: AppDimensions.sm),
+                    SizedBox(height: 8 * s),
                     Row(
                       children: [
                         Expanded(
                           child: Container(
-                            padding: const EdgeInsets.all(AppDimensions.cardPadding),
+                            padding: EdgeInsets.all(AppSizing.cardPadding(context)),
                             decoration: BoxDecoration(
                               color: AppColors.bgCard,
                               borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
@@ -109,14 +111,14 @@ class DashboardScreen extends StatelessWidget {
                             ),
                             child: CompassIndicator(
                               bearing: data.compassBearing,
-                              size: 100,
+                              size: AppSizing.indicatorSize(context),
                             ),
                           ),
                         ),
-                        const SizedBox(width: AppDimensions.sm),
+                        SizedBox(width: 8 * s),
                         Expanded(
                           child: Container(
-                            padding: const EdgeInsets.all(AppDimensions.cardPadding),
+                            padding: EdgeInsets.all(AppSizing.cardPadding(context)),
                             decoration: BoxDecoration(
                               color: AppColors.bgCard,
                               borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
@@ -126,13 +128,13 @@ class DashboardScreen extends StatelessWidget {
                               gX: data.gForceX,
                               gY: data.gForceY,
                               magnitude: data.gForceMagnitude,
-                              size: 100,
+                              size: AppSizing.indicatorSize(context),
                             ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: AppDimensions.md),
+                    SizedBox(height: 12 * s),
                     if (tripStatus == TripStatus.idle)
                       Obx(() => VeloButton(
                         label: 'MULAI',
@@ -155,7 +157,7 @@ class DashboardScreen extends StatelessWidget {
                               onPressed: c.onPausePressed,
                             ),
                           ),
-                          const SizedBox(width: AppDimensions.sm),
+                          SizedBox(width: 8 * s),
                           Expanded(
                             child: VeloButton(
                               label: 'BERHENTI',
@@ -167,7 +169,7 @@ class DashboardScreen extends StatelessWidget {
                         ],
                       ),
                     ],
-                    const SizedBox(height: AppDimensions.lg),
+                    SizedBox(height: 16 * s),
                   ],
                 ),
               ),
