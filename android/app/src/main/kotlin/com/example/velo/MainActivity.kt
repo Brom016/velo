@@ -7,5 +7,6 @@ class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(engine: FlutterEngine) {
         super.configureFlutterEngine(engine)
         VeloVideoEncoderPlugin.registerWith(engine)
+        VeloForegroundPlugin.registerWith(engine, this)
     }
 }

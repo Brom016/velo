@@ -5,6 +5,7 @@ import '../data/local/database/app_database.dart';
 import '../data/repositories/auth_repository.dart';
 import '../data/repositories/trip_repository.dart';
 import 'sensor_manager.dart';
+import 'foreground_service.dart';
 import '../data/remote/firebase/firestore_service.dart';
 import '../presentation/map/map_controller.dart';
 
@@ -40,6 +41,7 @@ class TripSessionManager extends GetxService {
 
     currentId.value = tripId;
     _sensors.startTracking();
+    await ForegroundService.start();
     final mapCtrl = Get.find<MapScreenController>();
     mapCtrl.clearRoute();
     mapCtrl.resetHighestSpeed();
@@ -50,6 +52,7 @@ class TripSessionManager extends GetxService {
   Future<void> pause() async {
     _stopTimers();
     _sensors.pause();
+    await ForegroundService.stop();
     await _flush();
     await _tripRepo.updateTripStatus(currentId.value!, 'paused');
     status.value = TripStatus.paused;
@@ -57,6 +60,7 @@ class TripSessionManager extends GetxService {
 
   Future<void> resume() async {
     _sensors.resume();
+    await ForegroundService.start();
     _startTimers();
     await _tripRepo.updateTripStatus(currentId.value!, 'active');
     status.value = TripStatus.active;
@@ -65,6 +69,7 @@ class TripSessionManager extends GetxService {
   Future<void> stop() async {
     _stopTimers();
     await _flush();
+    await ForegroundService.stop();
 
     final data = _sensors.telemetry.value;
     final tripId = currentId.value!;

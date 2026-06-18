@@ -17,8 +17,8 @@ class MapScreenController extends GetxController {
   static const _defaultLng = 106.8456;
   static const _defaultZoom = 15.0;
   static const double _speedTolerance = 5.0;
-  static const double _gapThresholdSec = 10.0;
-  static const double _routeMinDistM = 2.0;
+  static const double _gapThresholdSec = 8.0;
+  static const double _routeMinDistM = 0.8;
   static const double _mapMoveDistM = 10.0;
   static const double _stationarySpeed = 3.0;
 

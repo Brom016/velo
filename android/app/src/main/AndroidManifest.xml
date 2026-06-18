@@ -7,6 +7,9 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.BODY_SENSORS"/>
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
     <application
         android:label="velo"
         android:name="${applicationName}"
@@ -38,6 +41,11 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <service
+            android:name=".VeloForegroundService"
+            android:foregroundServiceType="location"
+            android:exported="false" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

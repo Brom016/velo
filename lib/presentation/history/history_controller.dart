@@ -19,6 +19,9 @@ class HistoryController extends GetxController {
     ever(Get.find<TripSessionManager>().status, (status) {
       if (status == TripStatus.idle) loadTrips();
     });
+    ever(_authRepo.userRx, (_) {
+      if (_authRepo.isLoggedIn) loadTrips();
+    });
   }
 
   Future<void> loadTrips() async {

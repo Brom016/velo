@@ -4,6 +4,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:flutter_compass/flutter_compass.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import '../domain/models/telemetry_data.dart';
 
@@ -11,6 +12,7 @@ class SensorManager extends GetxService {
   final telemetry = TelemetryData().obs;
   final isRunning = false.obs;
   final isTracking = false.obs;
+  final gpsAccuracy = 0.0.obs;
 
   StreamSubscription<Position>? _gpsSub;
   StreamSubscription<AccelerometerEvent>? _accelSub;
@@ -26,23 +28,30 @@ class SensorManager extends GetxService {
   DateTime? _lastUpdateTime;
   bool _internalTracking = false;
   int _stationaryCount = 0;
+  int _gpsIntervalSec = 2;
+
+  // Weighted position averaging
+  double _weightedLat = 0;
+  double _weightedLng = 0;
+  double _totalWeight = 0;
+  static const int _maxWeightedSamples = 5;
 
   // Adaptive speed smoothing
   double _smoothedSpeed = 0;
-  static const double _outlierThreshold = 25.0;
-  static const double _rapidChangeThreshold = 5.0;
-  static const double _adaptiveAlphaFast = 0.45;
-  static const double _adaptiveAlphaSlow = 0.15;
+  static const double _outlierThreshold = 20.0;
+  static const double _rapidChangeThreshold = 4.0;
+  static const double _adaptiveAlphaFast = 0.50;
+  static const double _adaptiveAlphaSlow = 0.20;
 
   // GPS quality
-  static const double _accuracyThreshold = 30.0;
-  static const double _jumpThresholdM = 100.0;
-  static const double _stationarySpeed = 3.0;
+  static const double _accuracyThreshold = 20.0;
+  static const double _jumpThresholdM = 200.0;
+  static const double _stationarySpeed = 2.0;
   static const int _stationaryLockCount = 5;
 
-  // Time throttle
+  // Time throttle - more aggressive when tracking
   DateTime _lastGpsProcessed = DateTime(2000);
-  static const Duration _minGpsInterval = Duration(milliseconds: 500);
+  Duration _minGpsInterval = const Duration(milliseconds: 500);
 
   // Route point callback
   void Function(double lat, double lng, double speedKmh)? onRoutePoint;
@@ -56,8 +65,14 @@ class SensorManager extends GetxService {
   @override
   void onReady() {
     super.onReady();
+    _loadSettings();
     start();
     resetTripCounters();
+  }
+
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    _gpsIntervalSec = prefs.getInt('gps_interval') ?? 2;
   }
 
   @override
@@ -104,6 +119,10 @@ class SensorManager extends GetxService {
   void startTracking() {
     _internalTracking = true;
     isTracking.value = true;
+    _minGpsInterval = const Duration(milliseconds: 200);
+    _weightedLat = 0;
+    _weightedLng = 0;
+    _totalWeight = 0;
     resetTripCounters();
     _acquireWakeLock();
   }
@@ -111,6 +130,10 @@ class SensorManager extends GetxService {
   void stopTracking() {
     _internalTracking = false;
     isTracking.value = false;
+    _minGpsInterval = Duration(seconds: _gpsIntervalSec);
+    _weightedLat = 0;
+    _weightedLng = 0;
+    _totalWeight = 0;
     resetTripCounters();
     _releaseWakeLock();
   }
@@ -146,6 +169,8 @@ class SensorManager extends GetxService {
     final rawSpeed = pos.speed * 3.6;
     final clamped = rawSpeed < 0 ? 0.0 : rawSpeed;
 
+    gpsAccuracy.value = pos.accuracy;
+
     if (pos.accuracy > _accuracyThreshold) {
       _prevLat = pos.latitude;
       _prevLng = pos.longitude;
@@ -160,7 +185,7 @@ class SensorManager extends GetxService {
       );
       if (jumpDist > _jumpThresholdM && _lastUpdateTime != null) {
         final elapsedSec = now.difference(_lastUpdateTime!).inMilliseconds / 1000.0;
-        if (elapsedSec < 5) {
+        if (elapsedSec < 8) {
           _prevLat = pos.latitude;
           _prevLng = pos.longitude;
           _hasPrevPos = true;
@@ -178,16 +203,35 @@ class SensorManager extends GetxService {
     double newMax = current.maxSpeedKmh;
     double newAvg = current.avgSpeedKmh;
 
+    double useLat = pos.latitude;
+    double useLng = pos.longitude;
+
     if (_internalTracking) {
+      if (pos.accuracy > 0) {
+        final weight = 1.0 / (pos.accuracy * pos.accuracy);
+        _weightedLat += pos.latitude * weight;
+        _weightedLng += pos.longitude * weight;
+        _totalWeight += weight;
+        if (_totalWeight > 0 && _totalWeight / weight <= _maxWeightedSamples) {
+          useLat = _weightedLat / _totalWeight;
+          useLng = _weightedLng / _totalWeight;
+        }
+        if (_totalWeight / weight > _maxWeightedSamples) {
+          _weightedLat = pos.latitude * weight;
+          _weightedLng = pos.longitude * weight;
+          _totalWeight = weight;
+        }
+      }
+
       double distanceDelta = 0;
       if (_hasPrevPos) {
         final rawDelta = Geolocator.distanceBetween(
-          _prevLat, _prevLng, pos.latitude, pos.longitude,
+          _prevLat, _prevLng, useLat, useLng,
         ) / 1000;
-        distanceDelta = speed > 2.0 ? rawDelta : 0;
+        distanceDelta = speed > _stationarySpeed ? rawDelta : 0;
       }
-      _prevLat = pos.latitude;
-      _prevLng = pos.longitude;
+      _prevLat = useLat;
+      _prevLng = useLng;
       _hasPrevPos = true;
 
       newDist = current.distanceKm + distanceDelta;
@@ -200,13 +244,13 @@ class SensorManager extends GetxService {
           ? newDist / elapsedHours
           : current.avgSpeedKmh;
     } else {
-      _prevLat = pos.latitude;
-      _prevLng = pos.longitude;
+      _prevLat = useLat;
+      _prevLng = useLng;
       _hasPrevPos = true;
     }
 
-    _lastGoodLat = pos.latitude;
-    _lastGoodLng = pos.longitude;
+    _lastGoodLat = useLat;
+    _lastGoodLng = useLng;
     _hasGoodPos = true;
     _lastUpdateTime = now;
 
@@ -216,24 +260,24 @@ class SensorManager extends GetxService {
       _stationaryCount = 0;
     }
 
-    final lat = _stationaryCount > _stationaryLockCount && _hasGoodPos
+    final finalLat = _stationaryCount > _stationaryLockCount && _hasGoodPos
         ? _lastGoodLat
-        : pos.latitude;
-    final lng = _stationaryCount > _stationaryLockCount && _hasGoodPos
+        : useLat;
+    final finalLng = _stationaryCount > _stationaryLockCount && _hasGoodPos
         ? _lastGoodLng
-        : pos.longitude;
+        : useLng;
 
     telemetry.value = current.copyWith(
       speedKmh: speed,
       avgSpeedKmh: newAvg,
       maxSpeedKmh: newMax,
       distanceKm: newDist,
-      latitude: lat,
-      longitude: lng,
+      latitude: finalLat,
+      longitude: finalLng,
     );
 
     if (_internalTracking && onRoutePoint != null) {
-      onRoutePoint!(pos.latitude, pos.longitude, speed);
+      onRoutePoint!(useLat, useLng, speed);
     }
   }
 
@@ -327,9 +371,13 @@ class SensorManager extends GetxService {
     _baselineAccel = 9.81;
     _smoothG = 0;
     _smoothedSpeed = 0;
+    _weightedLat = 0;
+    _weightedLng = 0;
+    _totalWeight = 0;
     telemetry.value = TelemetryData();
     isRunning.value = false;
     isTracking.value = false;
+    gpsAccuracy.value = 0;
     _releaseWakeLock();
   }
 

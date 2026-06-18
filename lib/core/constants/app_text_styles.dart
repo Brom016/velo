@@ -4,12 +4,13 @@ import 'app_colors.dart';
 class AppTextStyles {
   AppTextStyles._();
 
-  /// Ubah nilai ini untuk mengganti font secara global
+  /// Ganti font di sini secara global
   static const String monoFamily = 'JetBrainsMono';
-  static const String uiFamily = ''; // kosong = system default
+  static const String displayFamily = 'MinionPro';
+  static const String uiFamily = 'BrandonGrotesque';
 
   static final monoHero = TextStyle(
-    fontFamily: monoFamily,
+    fontFamily: displayFamily,
     fontSize: 56,
     fontWeight: FontWeight.bold,
     color: AppColors.textPrimary,

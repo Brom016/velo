@@ -1,3 +1,4 @@
+import 'dart:developer' as dev;
 import 'package:get/get.dart';
 import '../remote/firebase/auth_service.dart';
 import 'trip_repository.dart';
@@ -14,10 +15,13 @@ class AuthRepository extends GetxService {
   Rxn<UserModel> get userRx => _user;
 
   Future<void> _migrateIfNeeded() async {
+    if (uid == 'guest') return;
     try {
       final repo = Get.find<TripRepository>();
       await repo.migrateGuestTrips(uid);
-    } catch (_) {}
+    } catch (e) {
+      dev.log('Migrasi guest trips gagal: $e');
+    }
   }
 
   Future<UserModel> register({
@@ -30,8 +34,8 @@ class AuthRepository extends GetxService {
       email: email,
       password: password,
     );
-    _user.value = user;
     await _migrateIfNeeded();
+    _user.value = user;
     return user;
   }
 
@@ -40,15 +44,15 @@ class AuthRepository extends GetxService {
     required String password,
   }) async {
     final user = await _authService.login(email: email, password: password);
-    _user.value = user;
     await _migrateIfNeeded();
+    _user.value = user;
     return user;
   }
 
   Future<UserModel> loginWithGoogle() async {
     final user = await _authService.signInWithGoogle();
-    _user.value = user;
     await _migrateIfNeeded();
+    _user.value = user;
     return user;
   }
 
