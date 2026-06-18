@@ -43,3 +43,9 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Android local properties (contains local paths and API keys)
+/android/local.properties
+
+# Android resource secrets (contains API keys)
+**/res/values/secrets.xml

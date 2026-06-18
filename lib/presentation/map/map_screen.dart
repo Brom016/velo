@@ -1,9 +1,8 @@
 import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:get/get.dart';
-import 'package:latlong2/latlong.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
 import '../../core/constants/app_routes.dart';
@@ -40,55 +39,30 @@ class MapScreen extends StatelessWidget {
             flex: 3,
             child: Stack(
               children: [
-                FlutterMap(
-                  mapController: c.mapController,
-                  options: MapOptions(
-                    initialCenter: const LatLng(-6.2088, 106.8456),
-                    initialZoom: 15,
-                    backgroundColor: AppColors.bgSurface,
-                    interactionOptions: const InteractionOptions(
-                      flags: InteractiveFlag.all,
-                    ),
-                    onMapEvent: (e) {
-                      if (e is MapEventMoveEnd) {
-                        c.zoomLevel.value = e.camera.zoom;
-                      }
-                      if (e is MapEventMoveStart ||
-                          e is MapEventFlingAnimationStart) {
-                        c.userInteracting = true;
-                      }
-                      if (e is MapEventMoveEnd ||
-                          e is MapEventFlingAnimationEnd) {
-                        Future.delayed(const Duration(seconds: 3), () {
-                          c.userInteracting = false;
-                        });
-                      }
-                    },
+                GoogleMap(
+                  initialCameraPosition: const CameraPosition(
+                    target: LatLng(-6.2088, 106.8456),
+                    zoom: 15,
                   ),
-                  children: [
-                    TileLayer(
-                      urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                      userAgentPackageName: 'com.velo.app',
-                    ),
-                    Obx(() {
-                      final segments = c.routeSegments;
-                      if (segments.isEmpty) return const SizedBox.shrink();
-                      final polylines = <Polyline>[];
-                      for (final seg in segments) {
-                        if (seg.length < 2) continue;
-                        polylines.add(Polyline(
-                          points: List<LatLng>.from(seg),
-                          strokeWidth: 4,
-                          color: AppColors.amber.withValues(alpha: 0.7),
-                        ));
-                      }
-                      return PolylineLayer(polylines: polylines);
-                    }),
-                    Obx(() {
-                      final markers = c.markers;
-                      return MarkerLayer(markers: List<Marker>.from(markers));
-                    }),
-                  ],
+                  onMapCreated: c.onMapCreated,
+                  markers: c.buildMarkers(),
+                  polylines: c.buildPolylines(),
+                  myLocationEnabled: true,
+                  myLocationButtonEnabled: false,
+                  zoomControlsEnabled: false,
+                  compassEnabled: true,
+                  mapType: MapType.normal,
+                  onCameraMove: (pos) {
+                    c.zoomLevel.value = pos.zoom;
+                  },
+                  onCameraMoveStarted: () {
+                    c.userInteracting = true;
+                  },
+                  onCameraIdle: () {
+                    Future.delayed(const Duration(seconds: 3), () {
+                      c.userInteracting = false;
+                    });
+                  },
                 ),
                 // Zoom buttons (right)
                 Positioned(
@@ -102,15 +76,7 @@ class MapScreen extends StatelessWidget {
                       const SizedBox(height: 8),
                       _ZoomButton(
                         icon: Icons.my_location,
-                        onTap: () {
-                          final data = sensors.telemetry.value;
-                          if (data.latitude != null && data.longitude != null) {
-                            c.mapController.move(
-                              LatLng(data.latitude!, data.longitude!),
-                              c.zoomLevel.value,
-                            );
-                          }
-                        },
+                        onTap: c.centerOnCurrentLocation,
                       ),
                     ],
                   ),
@@ -263,7 +229,6 @@ class _MapCompassPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1);
 
-    // Fixed labels
     const labels = ['N', 'E', 'S', 'W'];
     for (int i = 0; i < 4; i++) {
       final angle = (i * 90 - 90) * 3.14159 / 180;
@@ -285,7 +250,6 @@ class _MapCompassPainter extends CustomPainter {
       ));
     }
 
-    // Rotating indicator (triangle pointing up)
     canvas.save();
     canvas.translate(center.dx, center.dy);
     canvas.rotate(bearing * 3.14159 / 180);

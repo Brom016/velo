@@ -42,6 +42,15 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="${googleMapsKey}" />
+
+        <!-- Force hybrid composition for platform views (Google Maps + Camera) -->
+        <meta-data
+            android:name="io.flutter.embedded_views_preview"
+            android:value="true" />
+
         <service
             android:name=".VeloForegroundService"
             android:foregroundServiceType="location"

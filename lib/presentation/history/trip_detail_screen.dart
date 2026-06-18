@@ -1,7 +1,7 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:get/get.dart';
-import 'package:latlong2/latlong.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_dimensions.dart';
 import '../../core/constants/app_sizing.dart';
@@ -120,7 +120,7 @@ class _RouteMap extends StatefulWidget {
 }
 
 class _RouteMapState extends State<_RouteMap> {
-  final _mapCtrl = MapController();
+  GoogleMapController? _mapCtrl;
   List<LatLng> _points = [];
   List<RoutePoint> _routePts = [];
   bool _loaded = false;
@@ -148,6 +148,66 @@ class _RouteMapState extends State<_RouteMap> {
     });
   }
 
+  LatLngBounds _boundsFromPoints(List<LatLng> pts) {
+    double? minLat, maxLat, minLng, maxLng;
+    for (final p in pts) {
+      minLat = minLat == null ? p.latitude : min(minLat, p.latitude);
+      maxLat = maxLat == null ? p.latitude : max(maxLat, p.latitude);
+      minLng = minLng == null ? p.longitude : min(minLng, p.longitude);
+      maxLng = maxLng == null ? p.longitude : max(maxLng, p.longitude);
+    }
+    return LatLngBounds(
+      southwest: LatLng(minLat!, minLng!),
+      northeast: LatLng(maxLat!, maxLng!),
+    );
+  }
+
+  Set<Marker> _buildMarkers() {
+    if (_points.isEmpty) return {};
+    final markers = <Marker>{
+      Marker(
+        markerId: const MarkerId('start'),
+        position: _points.first,
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+      ),
+      Marker(
+        markerId: const MarkerId('end'),
+        position: _points.last,
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+      ),
+    };
+
+    final maxPts = _routePts
+        .where((p) => p.speedKmh > 0)
+        .toList()
+      ..sort((a, b) => b.speedKmh.compareTo(a.speedKmh));
+    if (maxPts.isNotEmpty) {
+      final maxPt = maxPts.first;
+      markers.add(Marker(
+        markerId: const MarkerId('highest'),
+        position: LatLng(maxPt.latitude, maxPt.longitude),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
+        infoWindow: InfoWindow(
+          title: '${maxPt.speedKmh.toStringAsFixed(0)} km/h',
+        ),
+      ));
+    }
+
+    return markers;
+  }
+
+  Set<Polyline> _buildPolylines() {
+    if (_points.length < 2) return {};
+    return {
+      Polyline(
+        polylineId: const PolylineId('route'),
+        points: _points,
+        width: 3,
+        color: AppColors.amber.withValues(alpha: 0.8),
+      ),
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!_loaded) {
@@ -163,90 +223,24 @@ class _RouteMapState extends State<_RouteMap> {
       );
     }
 
-    final bounds = LatLngBounds.fromPoints(_points);
+    final bounds = _boundsFromPoints(_points);
     final center = LatLng(
-      (bounds.north + bounds.south) / 2,
-      (bounds.east + bounds.west) / 2,
+      (bounds.northeast.latitude + bounds.southwest.latitude) / 2,
+      (bounds.northeast.longitude + bounds.southwest.longitude) / 2,
     );
-    final zoom = 13.0;
 
-    final polylines = [
-      Polyline(
-        points: _points,
-        strokeWidth: 3,
-        color: AppColors.amber.withValues(alpha: 0.8),
-      ),
-    ];
-
-    final markers = <Marker>[
-      Marker(
-        point: _points.first,
-        width: 24,
-        height: 24,
-        child: const Icon(Icons.trip_origin, color: AppColors.positive, size: 24),
-      ),
-      Marker(
-        point: _points.last,
-        width: 24,
-        height: 24,
-        child: const Icon(Icons.place, color: AppColors.danger, size: 24),
-      ),
-    ];
-
-    final maxPts = _routePts
-        .where((p) => p.speedKmh > 0)
-        .toList()
-      ..sort((a, b) => b.speedKmh.compareTo(a.speedKmh));
-    if (maxPts.isNotEmpty) {
-      final maxPt = maxPts.first;
-      markers.add(
-        Marker(
-          point: LatLng(maxPt.latitude, maxPt.longitude),
-          width: 32,
-          height: 38,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                decoration: BoxDecoration(
-                  color: AppColors.danger,
-                  borderRadius: BorderRadius.circular(3),
-                ),
-                child: Text(
-                  '${maxPt.speedKmh.toStringAsFixed(0)}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 9,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const Icon(Icons.location_on, color: AppColors.danger, size: 22),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return FlutterMap(
-      mapController: _mapCtrl,
-      options: MapOptions(
-        initialCenter: center,
-        initialZoom: zoom,
-        backgroundColor: AppColors.bgSurface,
-        interactionOptions: const InteractionOptions(
-          flags: InteractiveFlag.all,
-        ),
-      ),
-      children: [
-        TileLayer(
-          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-          userAgentPackageName: 'com.velo.app',
-        ),
-        PolylineLayer(polylines: polylines),
-        MarkerLayer(markers: markers),
-      ],
+    return GoogleMap(
+      initialCameraPosition: CameraPosition(target: center, zoom: 13),
+      onMapCreated: (ctrl) => _mapCtrl = ctrl,
+      markers: _buildMarkers(),
+      polylines: _buildPolylines(),
+      myLocationEnabled: false,
+      zoomControlsEnabled: false,
+      compassEnabled: true,
+      mapType: MapType.normal,
+      onCameraIdle: () {
+        _mapCtrl?.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50));
+      },
     );
   }
 }

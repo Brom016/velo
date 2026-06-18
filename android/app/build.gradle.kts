@@ -7,6 +7,19 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Read Google Maps API key from android/local.properties (gitignored — contains google.maps.key=...)
+val googleMapsKey: String = run {
+    val f = rootProject.layout.projectDirectory.file("local.properties")
+    if (!f.asFile.exists()) return@run ""
+    val text = f.asFile.readText()
+    val prefix = "google.maps.key="
+    val idx = text.indexOf(prefix)
+    if (idx < 0) return@run ""
+    val start = idx + prefix.length
+    val end = text.indexOf('\n', start)
+    if (end >= 0) text.substring(start, end).trim() else text.substring(start).trim()
+}
+
 android {
     namespace = "com.example.velo"
     compileSdk = flutter.compileSdkVersion
@@ -18,14 +31,13 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.velo"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // Generate string resource so AndroidManifest can reference it via @string/google_maps_key
+        manifestPlaceholders["googleMapsKey"] = googleMapsKey
     }
 
     buildTypes {

@@ -1,10 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
-import 'package:latlong2/latlong.dart';
 import '../../core/constants/app_colors.dart';
 import '../../data/repositories/auth_repository.dart';
+import '../../domain/models/telemetry_data.dart';
 import '../../services/sensor_manager.dart';
 import '../../services/trip_session_manager.dart';
 
@@ -22,13 +21,13 @@ class MapScreenController extends GetxController {
   static const double _mapMoveDistM = 10.0;
   static const double _stationarySpeed = 3.0;
 
-  final mapController = MapController();
-  final markers = <Marker>[].obs;
-  final routeSegments = <List<LatLng>>[].obs;
+  GoogleMapController? mapController;
   final hasLocation = false.obs;
   final zoomLevel = _defaultZoom.obs;
+  final routeSegments = <List<LatLng>>[].obs;
   bool userInteracting = false;
 
+  LatLng? _currentPosition;
   double _highestSpeed = 0;
   LatLng? _highestSpeedPoint;
   LatLng? _lastRoutePoint;
@@ -52,35 +51,76 @@ class MapScreenController extends GetxController {
     };
   }
 
+  void onMapCreated(GoogleMapController controller) {
+    mapController = controller;
+  }
+
   void zoomIn() {
     zoomLevel.value = (zoomLevel.value + 1).clamp(3.0, 20.0);
-    mapController.move(mapController.camera.center, zoomLevel.value);
+    _moveCamera();
   }
 
   void zoomOut() {
     zoomLevel.value = (zoomLevel.value - 1).clamp(3.0, 20.0);
-    mapController.move(mapController.camera.center, zoomLevel.value);
+    _moveCamera();
+  }
+
+  void _moveCamera() {
+    final pos = _currentPosition ?? const LatLng(_defaultLat, _defaultLng);
+    mapController?.animateCamera(
+      CameraUpdate.newLatLngZoom(pos, zoomLevel.value),
+    );
+  }
+
+  Set<Marker> buildMarkers() {
+    final result = <Marker>{};
+    if (_currentPosition == null) return result;
+
+    result.add(Marker(
+      markerId: const MarkerId('current'),
+      position: _currentPosition!,
+      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
+    ));
+
+    if (_highestSpeedPoint != null && _highestSpeed > 0) {
+      result.add(Marker(
+        markerId: const MarkerId('highest'),
+        position: _highestSpeedPoint!,
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+        infoWindow: InfoWindow(
+          title: '${_highestSpeed.toStringAsFixed(0)} km/h',
+        ),
+      ));
+    }
+
+    return result;
+  }
+
+  Set<Polyline> buildPolylines() {
+    final result = <Polyline>{};
+    for (int i = 0; i < routeSegments.length; i++) {
+      final seg = routeSegments[i];
+      if (seg.length < 2) continue;
+      result.add(Polyline(
+        polylineId: PolylineId('route_$i'),
+        points: seg,
+        width: 4,
+        color: AppColors.amber.withValues(alpha: 0.7),
+      ));
+    }
+    return result;
   }
 
   void _initPosition() {
     final telemetry = _sensors.telemetry.value;
     if (telemetry.latitude != null && telemetry.longitude != null) {
-      _updatePosition(telemetry.latitude!, telemetry.longitude!);
-    } else {
-      final fallback = LatLng(_defaultLat, _defaultLng);
-      markers.value = [
-        Marker(
-          point: fallback,
-          width: 40,
-          height: 40,
-          child: const Icon(Icons.navigation, color: AppColors.amber, size: 36),
-        ),
-      ];
+      _currentPosition = LatLng(telemetry.latitude!, telemetry.longitude!);
+      hasLocation.value = true;
     }
   }
 
   void _listenToSensors() {
-    ever(_sensors.telemetry, (data) {
+    ever(_sensors.telemetry, (TelemetryData data) {
       if (data.latitude != null && data.longitude != null) {
         _updatePosition(data.latitude!, data.longitude!);
       }
@@ -95,8 +135,18 @@ class MapScreenController extends GetxController {
     _lastMapCenter = null;
   }
 
+  void clearRoute() {
+    routeSegments.clear();
+    _lastPointTime = null;
+    _lastRoutePoint = null;
+    _lastMapCenter = null;
+    _highestSpeed = 0;
+    _highestSpeedPoint = null;
+  }
+
   void _updatePosition(double lat, double lng) {
     final pos = LatLng(lat, lng);
+    _currentPosition = pos;
     hasLocation.value = true;
 
     final currentSpeed = _sensors.telemetry.value.speedKmh;
@@ -105,52 +155,6 @@ class MapScreenController extends GetxController {
       _highestSpeed = currentSpeed;
       _highestSpeedPoint = pos;
     }
-
-    final result = <Marker>[
-      Marker(
-        point: pos,
-        width: 40,
-        height: 40,
-        child: const Icon(
-          Icons.navigation,
-          color: AppColors.amber,
-          size: 36,
-        ),
-      ),
-    ];
-
-    if (_highestSpeedPoint != null && _highestSpeed > 0) {
-      result.add(
-        Marker(
-          point: _highestSpeedPoint!,
-          width: 32,
-          height: 38,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                decoration: BoxDecoration(
-                  color: AppColors.danger,
-                  borderRadius: BorderRadius.circular(3),
-                ),
-                child: Text(
-                  '${_highestSpeed.toStringAsFixed(0)}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 9,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const Icon(Icons.location_on, color: AppColors.danger, size: 22),
-            ],
-          ),
-        ),
-      );
-    }
-
-    markers.value = result;
 
     if (!userInteracting) {
       final isStationary = currentSpeed < _stationarySpeed;
@@ -161,14 +165,10 @@ class MapScreenController extends GetxController {
           ) > _mapMoveDistM;
 
       if (shouldMoveMap) {
-        try {
-          mapController.move(pos, zoomLevel.value);
-          _lastMapCenter = pos;
-        } catch (_) {
-          Future.delayed(const Duration(milliseconds: 200), () {
-            try { mapController.move(pos, zoomLevel.value); } catch (_) {}
-          });
-        }
+        mapController?.animateCamera(
+          CameraUpdate.newLatLngZoom(pos, zoomLevel.value),
+        );
+        _lastMapCenter = pos;
       }
     }
   }
@@ -197,12 +197,11 @@ class MapScreenController extends GetxController {
     }
   }
 
-  void clearRoute() {
-    routeSegments.clear();
-    _lastPointTime = null;
-    _lastRoutePoint = null;
-    _lastMapCenter = null;
-    _highestSpeed = 0;
-    _highestSpeedPoint = null;
+  void centerOnCurrentLocation() {
+    if (_currentPosition != null) {
+      mapController?.animateCamera(
+        CameraUpdate.newLatLngZoom(_currentPosition!, zoomLevel.value),
+      );
+    }
   }
 }
