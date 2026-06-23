@@ -43,3 +43,10 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+.ponytail/
+VELOpaper.md
+SEMOKpaper.md
+laporan.md
+opencode.json
+design.md
+system.md

@@ -7,6 +7,7 @@ import '../../core/constants/app_routes.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/repositories/trip_repository.dart';
 import '../../data/remote/firebase/auth_service.dart';
+import '../../data/remote/firebase/firestore_service.dart';
 
 class ProfileController extends GetxController {
   final AuthRepository _authRepo = Get.find<AuthRepository>();
@@ -128,9 +129,18 @@ class ProfileController extends GetxController {
   Future<void> loadTripStats() async {
     final uid = _authRepo.uid;
     final stats = await _tripRepo.getTripStats(uid);
-    tripCount.value = stats['count']!.toInt();
-    totalDistance.value = stats['totalDistance']!;
-    totalDuration.value = stats['totalDuration']!;
+    if (stats['count']! > 0 || !_authRepo.isLoggedIn) {
+      tripCount.value = stats['count']!.toInt();
+      totalDistance.value = stats['totalDistance']!;
+      totalDuration.value = stats['totalDuration']!;
+      return;
+    }
+    final cloudStats = await FirestoreService().getStats(uid);
+    if (cloudStats != null) {
+      tripCount.value = cloudStats['count']!.toInt();
+      totalDistance.value = cloudStats['totalDistance']!;
+      totalDuration.value = cloudStats['totalDuration']!;
+    }
   }
 
   Future<void> logout() async {

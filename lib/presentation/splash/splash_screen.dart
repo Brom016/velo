@@ -33,13 +33,13 @@ class _SplashScreenState extends State<SplashScreen>
   Future<void> _checkAuth() async {
     await Future.delayed(const Duration(milliseconds: 1200));
     try {
-      final user = await FirebaseAuth.instance.authStateChanges().first;
+      await FirebaseAuth.instance.authStateChanges().first;
       if (mounted) {
-        Get.offAllNamed(user != null ? AppRoutes.home : AppRoutes.login);
+        Get.offAllNamed(AppRoutes.home);
       }
     } catch (_) {
       if (mounted) {
-        Get.offAllNamed(AppRoutes.login);
+        Get.offAllNamed(AppRoutes.home);
       }
     }
   }

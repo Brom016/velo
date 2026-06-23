@@ -18,4 +18,19 @@ class FirestoreService {
       },
     }, SetOptions(merge: true));
   }
+
+  Future<Map<String, double>?> getStats(String uid) async {
+    try {
+      final doc = await _firestore.collection('users').doc(uid).get();
+      final stats = doc.data()?['stats'] as Map<String, dynamic>?;
+      if (stats == null) return null;
+      return {
+        'count': (stats['totalTrips'] as num?)?.toDouble() ?? 0,
+        'totalDistance': (stats['totalDistanceKm'] as num?)?.toDouble() ?? 0,
+        'totalDuration': (stats['totalDurationSeconds'] as num?)?.toDouble() ?? 0,
+      };
+    } catch (_) {
+      return null;
+    }
+  }
 }

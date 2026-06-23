@@ -21,6 +21,7 @@ class CameraController extends GetxController {
   final mode = CameraMode.photo.obs;
   final isRecording = false.obs;
   final isInitialized = false.obs;
+  final lastCapturePath = Rxn<String>();
 
   cam.CameraController? _camCtrl;
   cam.CameraController? get camCtrl => _camCtrl;
@@ -56,6 +57,7 @@ class CameraController extends GetxController {
         final outFile = File('${tempDir.path}/velo_${DateTime.now().millisecondsSinceEpoch}.png');
         await outFile.writeAsBytes(composited);
         await Gal.putImage(outFile.path);
+        lastCapturePath.value = outFile.path;
         return outFile.path;
       } else {
         if (isRecording.value) {
@@ -71,6 +73,7 @@ class CameraController extends GetxController {
             final ts = DateTime.now().millisecondsSinceEpoch.toString();
             await _generateCompanionVideo(samples, overlay.value, ts);
           }
+          lastCapturePath.value = videoPath;
           return videoPath;
         } else {
           await _camCtrl!.startVideoRecording();
@@ -127,8 +130,8 @@ class CameraController extends GetxController {
 
     final px = 12 * s;
     final py = image != null ? 12 * s : 120 * s;
-    final lh = 18 * s;
-    final labelW = 30 * s;
+    final lh = 26 * s;
+    final labelW = 50 * s;
 
     final visible = <String>[];
     if (ov.speed) visible.add('SPD|${data.speedKmh.toStringAsFixed(0)}|${textPrimary.toARGB32()}');
@@ -137,38 +140,38 @@ class CameraController extends GetxController {
     if (ov.distance) visible.add('DST|${data.distanceKm.toStringAsFixed(1)}|${greenColor.toARGB32()}');
 
     if (visible.isNotEmpty) {
-      final boxH = visible.length * lh + 12 * s;
-      final boxW = 160 * s;
-      _drawRoundRect(canvas, px, py, boxW, boxH, 6 * s, panelColor, amberColor, s);
-      double ty = py + 6 * s;
+      final boxH = visible.length * lh + 14 * s;
+      final boxW = 220 * s;
+      _drawRoundRect(canvas, px, py, boxW, boxH, 8 * s, panelColor, amberColor, s);
+      double ty = py + 7 * s;
       for (final line in visible) {
         final parts = line.split('|');
-        _drawText(canvas, parts[0], px + 6 * s, ty, 8 * s, amberColor, ui.FontWeight.bold);
-        _drawText(canvas, parts[1], px + 6 * s + labelW, ty, 9 * s, ui.Color(int.parse(parts[2])), ui.FontWeight.bold);
+        _drawText(canvas, parts[0], px + 8 * s, ty, 14 * s, amberColor, ui.FontWeight.bold);
+        _drawText(canvas, parts[1], px + 8 * s + labelW, ty, 16 * s, ui.Color(int.parse(parts[2])), ui.FontWeight.bold);
         ty += lh;
       }
     }
 
     // GPS & DateTime block
-    double infoTopY = py + (visible.isNotEmpty ? visible.length * lh + 12 * s : 0) + 4 * s;
+    double infoTopY = py + (visible.isNotEmpty ? visible.length * lh + 14 * s : 0) + 6 * s;
     final infoLines = <String>[];
     if (ov.datetime) infoLines.add(DateTime.now().toString().substring(0, 19));
     if (ov.gps && data.latitude != null && data.longitude != null) {
       infoLines.add('${data.latitude!.toStringAsFixed(5)}, ${data.longitude!.toStringAsFixed(5)}');
     }
     if (infoLines.isNotEmpty) {
-      final boxH3 = infoLines.length * 14 * s + 8 * s;
-      final boxW3 = 160 * s;
-      _drawRoundRect(canvas, px, infoTopY, boxW3, boxH3, 6 * s, panelColor, amberColor, s);
-      double iy = infoTopY + 4 * s;
+      final boxH3 = infoLines.length * 20 * s + 10 * s;
+      final boxW3 = 220 * s;
+      _drawRoundRect(canvas, px, infoTopY, boxW3, boxH3, 8 * s, panelColor, amberColor, s);
+      double iy = infoTopY + 5 * s;
       for (final line in infoLines) {
-        _drawText(canvas, line, px + 4 * s, iy, 9 * s, const ui.Color(0xFFBDBDBD), ui.FontWeight.normal);
-        iy += 14 * s;
+        _drawText(canvas, line, px + 6 * s, iy, 14 * s, const ui.Color(0xFFBDBDBD), ui.FontWeight.normal);
+        iy += 20 * s;
       }
     }
 
     // Top-right: compass + G-force
-    final rightX = w - 80 * s;
+    final rightX = w - 120 * s;
 
     if (ov.gforce || ov.compass) {
       final rightItems = <String>[];
@@ -178,25 +181,25 @@ class CameraController extends GetxController {
       }
       if (ov.compass) rightItems.add('');
 
-      final boxH2 = rightItems.length * lh + 12 * s + (ov.compass ? 60 * s : 0);
-      final boxW2 = 80 * s;
-      _drawRoundRect(canvas, rightX, py, boxW2, boxH2, 6 * s, panelColor, amberColor, s);
+      final boxH2 = rightItems.length * lh + 14 * s + (ov.compass ? 80 * s : 0);
+      final boxW2 = 110 * s;
+      _drawRoundRect(canvas, rightX, py, boxW2, boxH2, 8 * s, panelColor, amberColor, s);
 
-      double ty2 = py + 6 * s;
+      double ty2 = py + 7 * s;
       if (ov.gforce) {
-        _drawText(canvas, 'G', rightX + 4 * s, ty2, 8 * s, amberColor, ui.FontWeight.bold);
-        _drawText(canvas, data.gForceMagnitude.toStringAsFixed(2), rightX + boxW2 - 4 * s, ty2, 9 * s, cyanColor, ui.FontWeight.bold,
+        _drawText(canvas, 'G', rightX + 6 * s, ty2, 14 * s, amberColor, ui.FontWeight.bold);
+        _drawText(canvas, data.gForceMagnitude.toStringAsFixed(2), rightX + boxW2 - 6 * s, ty2, 16 * s, cyanColor, ui.FontWeight.bold,
             alignRight: true);
         ty2 += lh;
-        _drawText(canvas, 'G MAX', rightX + 4 * s, ty2, 7 * s, amberColor, ui.FontWeight.bold);
-        _drawText(canvas, data.maxGForce.toStringAsFixed(2), rightX + boxW2 - 4 * s, ty2, 9 * s, dangerColor, ui.FontWeight.bold,
+        _drawText(canvas, 'G MAX', rightX + 6 * s, ty2, 12 * s, amberColor, ui.FontWeight.bold);
+        _drawText(canvas, data.maxGForce.toStringAsFixed(2), rightX + boxW2 - 6 * s, ty2, 16 * s, dangerColor, ui.FontWeight.bold,
             alignRight: true);
         ty2 += lh;
       }
       if (ov.compass) {
         final cx = rightX + boxW2 / 2;
-        final cy = ty2 + 30 * s;
-        final cr = 26 * s;
+        final cy = ty2 + 40 * s;
+        final cr = 36 * s;
         _drawCompass(canvas, cx, cy, cr, data.compassBearing, s);
       }
     }
@@ -389,8 +392,8 @@ class CameraController extends GetxController {
       tileImage = frame.image;
     }
 
-    final mapSize = 120 * s;
-    final margin = 10 * s;
+    final mapSize = 160 * s;
+    final margin = 12 * s;
     final mapX = imgW - mapSize - margin;
     final mapY = imgH - mapSize - margin;
     final scale = mapSize / 256;

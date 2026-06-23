@@ -141,7 +141,7 @@ class LockedFeatureView extends StatelessWidget {
                     borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
                   ),
                 ),
-                child: const Text('MASUK', style: TextStyle(
+                child: const Text('Login Sekarang', style: TextStyle(
                     fontWeight: FontWeight.w700, fontSize: 14)),
               ),
             ),

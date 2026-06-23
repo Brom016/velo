@@ -4,10 +4,11 @@ import 'app_colors.dart';
 class AppTextStyles {
   AppTextStyles._();
 
-  /// Ganti font di sini secara global
-  static const String monoFamily = 'JetBrainsMono';
-  static const String displayFamily = 'MinionPro';
-  static const String uiFamily = 'BrandonGrotesque';
+  // ponytail: Montserrat for bold/mono/display, Poppins for body. JetBrainsMono/MinionPro/BrandonGrotesque files were missing
+  static const String monoFamily = 'Montserrat';
+  static const String displayFamily = 'Montserrat';
+  static const String boldFamily = 'Montserrat';
+  static const String bodyFamily = 'Poppins';
 
   static final monoHero = TextStyle(
     fontFamily: displayFamily,
@@ -49,27 +50,27 @@ class AppTextStyles {
   );
 
   static final heading = TextStyle(
-    fontFamily: uiFamily.isNotEmpty ? uiFamily : null,
+    fontFamily: boldFamily,
     fontSize: 22,
-    fontWeight: FontWeight.w600,
+    fontWeight: FontWeight.w900,
     color: AppColors.textPrimary,
   );
 
   static final subheading = TextStyle(
-    fontFamily: uiFamily.isNotEmpty ? uiFamily : null,
+    fontFamily: boldFamily,
     fontSize: 16,
-    fontWeight: FontWeight.w500,
+    fontWeight: FontWeight.w900,
     color: AppColors.textPrimary,
   );
 
   static final body = TextStyle(
-    fontFamily: uiFamily.isNotEmpty ? uiFamily : null,
+    fontFamily: bodyFamily,
     fontSize: 14,
     color: AppColors.textPrimary,
   );
 
   static final label = TextStyle(
-    fontFamily: uiFamily.isNotEmpty ? uiFamily : null,
+    fontFamily: bodyFamily,
     fontSize: 11,
     fontWeight: FontWeight.w500,
     color: AppColors.textSecondary,
@@ -77,7 +78,7 @@ class AppTextStyles {
   );
 
   static final labelDanger = TextStyle(
-    fontFamily: uiFamily.isNotEmpty ? uiFamily : null,
+    fontFamily: bodyFamily,
     fontSize: 11,
     fontWeight: FontWeight.w500,
     color: AppColors.danger,

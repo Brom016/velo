@@ -24,7 +24,7 @@ class MapScreen extends StatelessWidget {
     if (!auth.isLoggedIn) {
       return LockedFeatureView(
         title: 'Peta Terkunci',
-        message: 'Login diperlukan untuk melihat peta.',
+        message: 'Anda harus login untuk mengakses peta.',
         onLogin: () => Get.toNamed(AppRoutes.login),
       );
     }
@@ -154,7 +154,8 @@ class MapScreen extends StatelessWidget {
                     top: BorderSide(color: AppColors.border, width: 0.5),
                   ),
                 ),
-                child: Column(
+                child: SingleChildScrollView(
+                  child: Column(
                   children: [
                     Row(
                       children: [
@@ -183,6 +184,7 @@ class MapScreen extends StatelessWidget {
                     ),
                   ],
                 ),
+                  ),
               );
             }),
           ),

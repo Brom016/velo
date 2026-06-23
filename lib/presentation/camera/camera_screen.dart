@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:camera/camera.dart' as cam;
@@ -50,7 +51,7 @@ class _CameraScreenState extends State<CameraScreen> with SingleTickerProviderSt
     if (!auth.isLoggedIn) {
       return LockedFeatureView(
         title: 'Kamera Terkunci',
-        message: 'Login diperlukan untuk menggunakan kamera.',
+        message: 'Anda harus login untuk mengakses kamera.',
         onLogin: () => Get.toNamed(AppRoutes.login),
       );
     }
@@ -83,7 +84,7 @@ class _CameraScreenState extends State<CameraScreen> with SingleTickerProviderSt
               top: AppDimensions.md,
               left: AppDimensions.md,
               child: Container(
-                padding: const EdgeInsets.all(8),
+                padding: EdgeInsets.all(AppSizing.spacing(context, 8)),
                 decoration: BoxDecoration(
                   color: AppColors.bgPrimary.withValues(alpha: 0.72),
                   borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
@@ -143,8 +144,8 @@ class _CameraScreenState extends State<CameraScreen> with SingleTickerProviderSt
                   child: Opacity(
                     opacity: Get.find<SettingsController>().miniMapOpacity.value,
                     child: Container(
-                      width: 140,
-                      height: 140,
+                      width: MediaQuery.of(context).size.width * 0.42,
+                      height: MediaQuery.of(context).size.width * 0.42,
                       decoration: BoxDecoration(
                         border: Border.all(color: AppColors.amber.withValues(alpha: 0.28)),
                       ),
@@ -177,6 +178,32 @@ class _CameraScreenState extends State<CameraScreen> with SingleTickerProviderSt
                   ),
                 ),
               ),
+
+            // ── Result preview (bottom-left) ──
+            Obx(() {
+              final path = c.lastCapturePath.value;
+              if (path == null) return const SizedBox.shrink();
+              final isVideo = path.endsWith('.mp4');
+              return Positioned(
+                bottom: AppDimensions.lg + 90,
+                left: AppDimensions.md,
+                child: GestureDetector(
+                  onTap: () => _showResult(context, path, isVideo),
+                  child: Container(
+                    width: 72, height: 72,
+                    decoration: BoxDecoration(
+                      color: AppColors.bgOverlay,
+                      borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+                      border: Border.all(color: AppColors.amber.withValues(alpha: 0.5)),
+                      image: isVideo ? null : DecorationImage(image: FileImage(File(path)), fit: BoxFit.cover),
+                    ),
+                    child: isVideo
+                        ? const Icon(Icons.play_circle_fill, color: AppColors.amber, size: 36)
+                        : null,
+                  ),
+                ),
+              );
+            }),
 
             // ── Bottom controls ──
             Positioned(
@@ -280,24 +307,62 @@ class _CameraScreenState extends State<CameraScreen> with SingleTickerProviderSt
     );
   }
 
+  void _showResult(BuildContext context, String path, bool isVideo) {
+    if (isVideo) {
+      Get.snackbar('Video Tersimpan', 'Video tersimpan di galeri');
+      return;
+    }
+    Get.dialog(
+      Scaffold(
+        backgroundColor: Colors.black,
+        body: SafeArea(
+          child: Stack(
+            children: [
+              Center(
+                child: InteractiveViewer(
+                  child: Image.file(File(path), fit: BoxFit.contain),
+                ),
+              ),
+              Positioned(
+                top: 8, right: 8,
+                child: GestureDetector(
+                  onTap: () => Get.back(),
+                  child: Container(
+                    width: 36, height: 36,
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: const Icon(Icons.close, color: Colors.white, size: 18),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      useSafeArea: false,
+    );
+  }
+
   Widget _hudRow(String label, String value, [Color? valColor, bool small = false]) {
     final s = AppSizing.scale(context);
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 1 * s),
+      padding: EdgeInsets.symmetric(vertical: 2 * s),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (valColor == null || !small) ...[
             Text(label, style: AppTextStyles.monoXxs.copyWith(
-              color: AppColors.amber, fontSize: 9 * s)),
-            SizedBox(width: 5 * s),
+              color: AppColors.amber, fontSize: 13 * s)),
+            SizedBox(width: 8 * s),
           ],
           Text(value,
             style: small
                 ? AppTextStyles.monoXxs.copyWith(
-                    fontSize: 9 * s, color: valColor ?? AppColors.textPrimary)
+                    fontSize: 13 * s, color: valColor ?? AppColors.textPrimary)
                 : AppTextStyles.monoSm.copyWith(
-                    fontSize: 11 * s, color: valColor ?? AppColors.textPrimary)),
+                    fontSize: 18 * s, color: valColor ?? AppColors.textPrimary)),
         ],
       ),
     );
@@ -306,13 +371,13 @@ class _CameraScreenState extends State<CameraScreen> with SingleTickerProviderSt
   Widget _animRow(String label, double value, String Function(double) format, Color color) {
     final s = AppSizing.scale(context);
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 1 * s),
+      padding: EdgeInsets.symmetric(vertical: 2 * s),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(label, style: AppTextStyles.monoXxs.copyWith(
-            color: AppColors.amber, fontSize: 9 * s)),
-          SizedBox(width: 5 * s),
+            color: AppColors.amber, fontSize: 13 * s)),
+          SizedBox(width: 8 * s),
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
             transitionBuilder: (child, anim) => FadeTransition(
@@ -323,7 +388,7 @@ class _CameraScreenState extends State<CameraScreen> with SingleTickerProviderSt
               format(value),
               key: ValueKey('$label-${value.toStringAsFixed(1)}'),
               style: AppTextStyles.monoSm.copyWith(
-                fontSize: 11 * s, color: color),
+                fontSize: 18 * s, color: color),
             ),
           ),
         ],
@@ -333,7 +398,7 @@ class _CameraScreenState extends State<CameraScreen> with SingleTickerProviderSt
 
   Widget _cameraCompass(double bearing) {
     final s = AppSizing.scale(context);
-    final size = (76 * s).clamp(60.0, 120.0);
+    final size = (96 * s).clamp(76.0, 160.0);
     return SizedBox(
       width: size,
       height: size,
@@ -345,7 +410,7 @@ class _CameraScreenState extends State<CameraScreen> with SingleTickerProviderSt
 
   Widget _cameraGforce(double gX, double gY) {
     final s = AppSizing.scale(context);
-    final size = (76 * s).clamp(60.0, 120.0);
+    final size = (96 * s).clamp(76.0, 160.0);
     final mag = sqrt(gX * gX + gY * gY);
     return SizedBox(
       width: size,

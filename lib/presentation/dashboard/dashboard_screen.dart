@@ -49,129 +49,139 @@ class DashboardScreen extends StatelessWidget {
                 ],
               ),
             ),
-            SizedBox(height: 6 * s),
+            SizedBox(height: 4 * s),
             Expanded(
+              child: Center(
+                child: SingleChildScrollView(
+                  child: SpeedometerGauge(
+                    speed: data.speedKmh,
+                    maxScale: 200,
+                    size: AppSizing.speedometerSize(context),
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: AppSizing.spacing(context, 12)),
               child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: AppSizing.spacing(context, 12)),
                 child: Column(
-                  children: [
-                    SpeedometerGauge(
-                      speed: data.speedKmh,
-                      maxScale: 200,
-                      size: AppSizing.speedometerSize(context),
-                    ),
-                    SizedBox(height: 12 * s),
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Wrap(
+                    spacing: 6 * s,
+                    runSpacing: 6 * s,
+                    children: [
+                      SizedBox(
+                        width: (MediaQuery.of(context).size.width - 24 * s - 24) / 2 - 3 * s,
+                        child: MetricCard(
+                          label: 'RATA-RATA',
+                          value: Formatters.speed(data.avgSpeedKmh),
+                          unit: 'km/h',
+                        ),
+                      ),
+                      SizedBox(
+                        width: (MediaQuery.of(context).size.width - 24 * s - 24) / 2 - 3 * s,
+                        child: MetricCard(
+                          label: 'TERTINGGI',
+                          value: Formatters.speed(data.maxSpeedKmh),
+                          unit: 'km/h',
+                          valueColor: AppColors.amber,
+                        ),
+                      ),
+                      SizedBox(
+                        width: (MediaQuery.of(context).size.width - 24 * s - 24) / 2 - 3 * s,
+                        child: MetricCard(
+                          label: 'JARAK',
+                          value: Formatters.shortDistance(data.distanceKm),
+                          unit: 'km',
+                          valueColor: AppColors.positive,
+                        ),
+                      ),
+                      SizedBox(
+                        width: (MediaQuery.of(context).size.width - 24 * s - 24) / 2 - 3 * s,
+                        child: MetricCard(
+                          label: 'G TERTINGGI',
+                          value: Formatters.gForce(data.maxGForce),
+                          unit: 'G',
+                          valueColor: AppColors.cyan,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8 * s),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          padding: EdgeInsets.all(AppSizing.cardPadding(context)),
+                          decoration: BoxDecoration(
+                            color: AppColors.bgCard,
+                            borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                            border: Border.all(color: AppColors.border, width: 0.5),
+                          ),
+                          child: CompassIndicator(
+                            bearing: data.compassBearing,
+                            size: AppSizing.indicatorSize(context),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 8 * s),
+                      Expanded(
+                        child: Container(
+                          padding: EdgeInsets.all(AppSizing.cardPadding(context)),
+                          decoration: BoxDecoration(
+                            color: AppColors.bgCard,
+                            borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                            border: Border.all(color: AppColors.border, width: 0.5),
+                          ),
+                          child: GForceIndicator(
+                            gX: data.gForceX,
+                            gY: data.gForceY,
+                            magnitude: data.gForceMagnitude,
+                            size: AppSizing.indicatorSize(context),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 12 * s),
+                  if (tripStatus == TripStatus.idle)
+                    Obx(() => VeloButton(
+                      label: 'MULAI',
+                      icon: Icons.play_arrow,
+                      loading: c.startLoading.value,
+                      onPressed: c.onStartPressed,
+                    ))
+                  else ...[
                     Row(
                       children: [
                         Expanded(
-                          child: MetricCard(
-                            label: 'RATA-RATA',
-                            value: Formatters.speed(data.avgSpeedKmh),
-                            unit: 'km/h',
-                          ),
-                        ),
-                        SizedBox(width: 6 * s),
-                        Expanded(
-                          child: MetricCard(
-                            label: 'TERTINGGI',
-                            value: Formatters.speed(data.maxSpeedKmh),
-                            unit: 'km/h',
-                            valueColor: AppColors.amber,
-                          ),
-                        ),
-                        Expanded(
-                          child: MetricCard(
-                            label: 'JARAK',
-                            value: Formatters.shortDistance(data.distanceKm),
-                            unit: 'km',
-                            valueColor: AppColors.positive,
-                          ),
-                        ),
-                        SizedBox(width: 6 * s),
-                        Expanded(
-                          child: MetricCard(
-                            label: 'G TERTINGGI',
-                            value: Formatters.gForce(data.maxGForce),
-                            unit: 'G',
-                            valueColor: AppColors.cyan,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 8 * s),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            padding: EdgeInsets.all(AppSizing.cardPadding(context)),
-                            decoration: BoxDecoration(
-                              color: AppColors.bgCard,
-                              borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                              border: Border.all(color: AppColors.border, width: 0.5),
-                            ),
-                            child: CompassIndicator(
-                              bearing: data.compassBearing,
-                              size: AppSizing.indicatorSize(context),
-                            ),
+                          child: VeloButton(
+                            label: tripStatus == TripStatus.paused
+                                ? 'LANJUTKAN' : 'JEDA',
+                            icon: tripStatus == TripStatus.paused
+                                ? Icons.play_arrow : Icons.pause,
+                            style: tripStatus == TripStatus.paused
+                                ? VeloButtonStyle.primary
+                                : VeloButtonStyle.outline,
+                            onPressed: c.onPausePressed,
                           ),
                         ),
                         SizedBox(width: 8 * s),
                         Expanded(
-                          child: Container(
-                            padding: EdgeInsets.all(AppSizing.cardPadding(context)),
-                            decoration: BoxDecoration(
-                              color: AppColors.bgCard,
-                              borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                              border: Border.all(color: AppColors.border, width: 0.5),
-                            ),
-                            child: GForceIndicator(
-                              gX: data.gForceX,
-                              gY: data.gForceY,
-                              magnitude: data.gForceMagnitude,
-                              size: AppSizing.indicatorSize(context),
-                            ),
+                          child: VeloButton(
+                            label: 'BERHENTI',
+                            icon: Icons.stop,
+                            style: VeloButtonStyle.danger,
+                            onPressed: c.onStopPressed,
                           ),
                         ),
                       ],
                     ),
-                    SizedBox(height: 12 * s),
-                    if (tripStatus == TripStatus.idle)
-                      Obx(() => VeloButton(
-                        label: 'MULAI',
-                        icon: Icons.play_arrow,
-                        loading: c.startLoading.value,
-                        onPressed: c.onStartPressed,
-                      ))
-                    else ...[
-                      Row(
-                        children: [
-                          Expanded(
-                            child: VeloButton(
-                              label: tripStatus == TripStatus.paused
-                                  ? 'LANJUTKAN' : 'JEDA',
-                              icon: tripStatus == TripStatus.paused
-                                  ? Icons.play_arrow : Icons.pause,
-                              style: tripStatus == TripStatus.paused
-                                  ? VeloButtonStyle.primary
-                                  : VeloButtonStyle.outline,
-                              onPressed: c.onPausePressed,
-                            ),
-                          ),
-                          SizedBox(width: 8 * s),
-                          Expanded(
-                            child: VeloButton(
-                              label: 'BERHENTI',
-                              icon: Icons.stop,
-                              style: VeloButtonStyle.danger,
-                              onPressed: c.onStopPressed,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                    SizedBox(height: 16 * s),
                   ],
-                ),
+                  SizedBox(height: 12 * s),
+                ],
+              ),
               ),
             ),
           ],

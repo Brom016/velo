@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../core/constants/app_routes.dart';
 import '../../data/repositories/auth_repository.dart';
 
 class HomeController extends GetxController {
@@ -11,12 +10,6 @@ class HomeController extends GetxController {
   bool get isGuest => !_authRepo.isLoggedIn;
 
   void onTabTapped(int index) {
-    if (index == 1 || index == 2) {
-      if (isGuest) {
-        Get.toNamed(AppRoutes.login);
-        return;
-      }
-    }
     currentIndex.value = index;
   }
 

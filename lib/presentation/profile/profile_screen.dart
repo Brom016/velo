@@ -72,7 +72,7 @@ class ProfileScreen extends StatelessWidget {
               _menuItem(context, Icons.settings_outlined, 'Pengaturan',
                   () => Get.toNamed(AppRoutes.settings), s),
               SizedBox(height: AppSizing.spacing(context, 8)),
-              _menuItem(context, Icons.info_outline, 'Tentang', () {}, s),
+              _menuItem(context, Icons.info_outline, 'Tentang', () => _showAbout(context), s),
               SizedBox(height: AppSizing.spacing(context, 20)),
               VeloButton(
                 label: 'KELUAR',
@@ -84,6 +84,62 @@ class ProfileScreen extends StatelessWidget {
           ),
         );
       }),
+    );
+  }
+
+  void _showAbout(BuildContext context) {
+    Get.dialog(
+      AlertDialog(
+        backgroundColor: AppColors.bgSurface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+          side: const BorderSide(color: AppColors.border, width: 0.5),
+        ),
+        title: Column(
+          children: [
+            Text('VELO', style: AppTextStyles.monoLg.copyWith(
+              color: AppColors.amber, letterSpacing: 6, fontSize: 28)),
+            const SizedBox(height: 4),
+            Text('TELEMETRY SYSTEM', style: AppTextStyles.label.copyWith(
+              letterSpacing: 4, fontSize: 10)),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('v1.0.0', style: AppTextStyles.monoXs.copyWith(
+                color: AppColors.textSecondary)),
+              const SizedBox(height: AppDimensions.md),
+              Text(
+                'Aplikasi kendaraan speedometer dan telemetry — local-first, offline capable. '
+                'Menyediakan dashboard kecepatan, peta rute, kamera dengan HUD telemetry, '
+                'riwayat perjalanan, dan sinkronisasi cloud.',
+                style: AppTextStyles.body.copyWith(fontSize: 13),
+              ),
+              const SizedBox(height: AppDimensions.sm),
+              Text(
+                'Fitur:\n'
+                '• Dashboard dengan speedometer, G-Force, kompas\n'
+                '• Peta rute dengan polyline dan marker\n'
+                '• Kamera dengan overlay telemetry (foto/video)\n'
+                '• Riwayat perjalanan dengan detail\n'
+                '• Sinkronisasi cloud antar perangkat\n'
+                '• Mode offline untuk fitur non-seluler',
+                style: AppTextStyles.body.copyWith(fontSize: 12, color: AppColors.textSecondary),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            style: TextButton.styleFrom(foregroundColor: AppColors.amber),
+            child: const Text('TUTUP'),
+          ),
+        ],
+      ),
     );
   }
 

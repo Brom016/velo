@@ -15,7 +15,7 @@ class AppSizing {
 
   static double speedometerSize(BuildContext c) {
     final w = MediaQuery.of(c).size.width;
-    return (w * 0.55).clamp(170, 260);
+    return (w * 0.62).clamp(200, 320);
   }
 
   static double indicatorSize(BuildContext c) {

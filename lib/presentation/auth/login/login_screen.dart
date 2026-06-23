@@ -20,7 +20,24 @@ class LoginScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.bgPrimary,
       body: SafeArea(
-        child: SingleChildScrollView(
+        child: Stack(
+          children: [
+            Positioned(
+              top: AppSizing.spacing(context, 8),
+              left: AppSizing.spacing(context, 8),
+              child: GestureDetector(
+                onTap: () => Get.back(),
+                child: Container(
+                  width: 36, height: 36,
+                  decoration: BoxDecoration(
+                    color: AppColors.bgOverlay,
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: const Icon(Icons.close, color: AppColors.textPrimary, size: 18),
+                ),
+              ),
+            ),
+            SingleChildScrollView(
           padding: EdgeInsets.symmetric(horizontal: AppSizing.spacing(context, 20)),
           child: Column(
             children: [
@@ -93,6 +110,8 @@ class LoginScreen extends StatelessWidget {
               SizedBox(height: AppSizing.spacing(context, 20)),
             ],
           ),
+        ),
+          ],
         ),
       ),
     );

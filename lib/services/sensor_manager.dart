@@ -36,18 +36,15 @@ class SensorManager extends GetxService {
   double _totalWeight = 0;
   static const int _maxWeightedSamples = 5;
 
-  // Adaptive speed smoothing
+  // ponytail: 1D Kalman filter state
   double _smoothedSpeed = 0;
-  static const double _outlierThreshold = 20.0;
-  static const double _rapidChangeThreshold = 4.0;
-  static const double _adaptiveAlphaFast = 0.50;
-  static const double _adaptiveAlphaSlow = 0.20;
+  double _kalmanP = 1.0;
 
   // GPS quality
   static const double _accuracyThreshold = 20.0;
   static const double _jumpThresholdM = 200.0;
-  static const double _stationarySpeed = 2.0;
-  static const int _stationaryLockCount = 5;
+  static const double _stationarySpeed = 1.0;
+  static const int _stationaryLockCount = 3;
 
   // Time throttle - more aggressive when tracking
   DateTime _lastGpsProcessed = DateTime(2000);
@@ -154,6 +151,7 @@ class SensorManager extends GetxService {
     _stationaryCount = 0;
     _smoothG = 0;
     _smoothedSpeed = 0;
+    _kalmanP = 1.0;
     final prev = telemetry.value;
     telemetry.value = TelemetryData(
       latitude: prev.latitude,
@@ -176,6 +174,7 @@ class SensorManager extends GetxService {
       _prevLng = pos.longitude;
       _hasPrevPos = true;
       _lastUpdateTime = now;
+      _kalmanSpeed(clamped);
       return;
     }
 
@@ -195,7 +194,7 @@ class SensorManager extends GetxService {
       }
     }
 
-    final speed = _smoothSpeed(clamped);
+    final speed = _kalmanSpeed(clamped);
 
     final current = telemetry.value;
 
@@ -281,23 +280,20 @@ class SensorManager extends GetxService {
     }
   }
 
-  double _smoothSpeed(double rawSpeed) {
-    if (_smoothedSpeed == 0) {
-      _smoothedSpeed = rawSpeed;
-      return rawSpeed;
-    }
-
-    final diff = (rawSpeed - _smoothedSpeed).abs();
-    if (diff > _outlierThreshold) {
+  // ponytail: 1D Kalman filter, upgrade to 2D (pos+vel) if accuracy needs at low speeds
+  double _kalmanSpeed(double measurement) {
+    if (measurement < 0) measurement = 0;
+    if (_smoothedSpeed <= 0) {
+      _smoothedSpeed = measurement;
+      _kalmanP = 1.0;
       return _smoothedSpeed;
     }
-
-    final alpha = diff > _rapidChangeThreshold
-        ? _adaptiveAlphaFast
-        : _adaptiveAlphaSlow;
-
-    _smoothedSpeed = alpha * rawSpeed + (1 - alpha) * _smoothedSpeed;
-
+    const double q = 2.0; // process noise
+    final double r = 10.0; // measurement noise
+    _kalmanP += q;
+    final double k = _kalmanP / (_kalmanP + r);
+    _smoothedSpeed += k * (measurement - _smoothedSpeed);
+    _kalmanP = (1 - k) * _kalmanP;
     return _smoothedSpeed;
   }
 
@@ -371,6 +367,7 @@ class SensorManager extends GetxService {
     _baselineAccel = 9.81;
     _smoothG = 0;
     _smoothedSpeed = 0;
+    _kalmanP = 1.0;
     _weightedLat = 0;
     _weightedLng = 0;
     _totalWeight = 0;
